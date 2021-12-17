@@ -1,0 +1,10 @@
+
+alias l='ls -al'
+alias ..='cd ..'
+alias ...='cd ...'
+alias ....='cd ....'
+alias -- -='cd -'
+alias gs='git status'
+alias gg='git grep'
+alias g='grep -inRI'
+
