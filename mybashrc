@@ -1,10 +1,26 @@
+## BASHRC
+alias rebash='. ~/.bashrc'
+alias bashedit='vi ~/setup/mybashrc; rebash'
 
+
+## LS
 alias l='ls -al'
+
+
+## CD
 alias ..='cd ..'
 alias ...='cd ...'
 alias ....='cd ....'
 alias -- -='cd -'
+
+
+## GIT
 alias gs='git status'
 alias gg='git grep'
 alias g='grep -inRI'
 
+
+## PS1
+function __current_branch__ {
+  [ -d .git ] && git name-rev --name-only @
+}
