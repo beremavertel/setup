@@ -24,3 +24,7 @@ alias g='grep -inRI'
 function __current_branch__ {
   [ -d .git ] && git name-rev --name-only @
 }
+
+# Stolen from default ubuntu
+PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ ' # TODO: fix this so it has (__git_branch__) in separate color if, and only if, in a git-repo
+
