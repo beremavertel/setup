@@ -5,12 +5,13 @@ alias bashedit='vi ~/setup/mybashrc; rebash'
 
 ## LS
 alias l='ls -al'
+alias ö='l'
 
 
 ## CD
 alias ..='cd ..'
-alias ...='cd ...'
-alias ....='cd ....'
+alias -- ...='cd ../..'
+alias -- ....='cd ../../..'
 alias -- -='cd -'
 
 
