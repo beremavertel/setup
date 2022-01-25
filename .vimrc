@@ -5,3 +5,5 @@ set expandtab
 
 autocmd BufWritePre * :%s/\s\+$//e
 
+set number
+
