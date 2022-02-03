@@ -7,3 +7,4 @@ autocmd BufWritePre * :%s/\s\+$//e
 
 set number
 
+let @l='i_logger.warning(f"{OF=}")'
