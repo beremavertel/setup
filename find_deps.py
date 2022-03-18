@@ -1,8 +1,12 @@
+#!/usr/bin/python3
 import glob
 import os
 import json
 import sys
 
+from collections import defaultdict
+
+calc_tree = defaultdict(int)
 root_dir = "/usr/share"
 
 
@@ -39,8 +43,8 @@ def _read_manif(path):
         return mod_path, module, eval(cleaned)
     except ValueError:
         return mod_path, module, []
-from collections import defaultdict
-calc_tree = defaultdict(int)
+
+
 def find_tree(struc, module, depth=0):
     missing = set()
     if module not in struc:
