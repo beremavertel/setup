@@ -58,7 +58,7 @@ def find_tree(struc, module, depth=0):
             calc_tree[x] = max(depth, calc_tree[x])
             missing.update(find_tree(struc, x, depth+1))
 
-    if depth == 0:
+    if depth == 0 and missing:
         print("Missing modules:")
         print("\n".join(missing))
     return missing

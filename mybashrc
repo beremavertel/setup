@@ -2,6 +2,7 @@
 alias rebash='. ~/.bashrc'
 alias bashedit='vi ~/setup/mybashrc; rebash'
 
+export PATH="~/setup/scripts:$PATH"
 
 ## LS
 alias l='ls -al'
