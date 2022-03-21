@@ -27,10 +27,7 @@ alias -- -='cd -'
 alias gs='git status'
 alias gg='git grep'
 alias g='grep -inRI'
-
-function modules_changed {
-    git diff "$*" --stat  | grep -v "files changed" | grep -v "insertions(" | grep -o "^ [^/ ]*" | grep -v "^ ...$" | grep -o "[^ ].*" | grep -v ".gitignore" | sort | uniq
-}
+alias gitbranches='for x in `echo odoo-*`;do cd $x; echo "`git rev-parse --abbrev-ref HEAD` - $x"; cd - > /dev/null; done | sort'
 
 
 ## PS1
@@ -38,16 +35,22 @@ function __current_branch__ {
   [ -d .git ] && git name-rev --name-only @
 }
 
+
 # Stolen from default ubuntu
 PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ ' # TODO: fix this so it has (__git_branch__) in separate color if, and only if, in a git-rep
+
 
 # ODOO-move
 alias olog='cd /var/log/odoo/'
 
-alias gitbranches='for x in `echo odoo-*`;do cd $x; echo "`git rev-parse --abbrev-ref HEAD` - $x"; cd - > /dev/null; done | sort'
 
-function __odoo_psql__ {
+function odoo_psql {
     sudo su odoo -c "psql $1"
 }
 
-alias odoopsql='__odoo_psql__'
+
+function modules_changed {
+    git diff "$*" --stat  | grep -v "files changed" | grep -v "insertions(" | grep -o "^ [^/ ]*" | grep -v "^ ...$" | grep -o "[^ ].*" | grep -v ".gitignore" | sort | uniq
+}
+
+
