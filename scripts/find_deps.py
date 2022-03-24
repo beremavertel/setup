@@ -4,6 +4,7 @@ import os
 import json
 import sys
 
+import argparse
 from collections import defaultdict
 
 calc_tree = defaultdict(int)
@@ -45,8 +46,10 @@ def _read_manif(path):
         return mod_path, module, []
 
 
-def find_tree(struc, module, depth=0):
+def find_tree(struc, module, depth=0, max_depth=None):
     missing = set()
+    if max_depth is not None and depth > max_depth:
+        return missing
     if module not in struc:
         missing.add(module)
     else:
@@ -56,12 +59,18 @@ def find_tree(struc, module, depth=0):
         print(f"{space}{module}")
         for x in dep:
             calc_tree[x] = max(depth, calc_tree[x])
-            missing.update(find_tree(struc, x, depth+1))
+            missing.update(find_tree(struc, x, depth+1, max_depth))
 
     if depth == 0 and missing:
         print("Missing modules:")
         print("\n".join(missing))
     return missing
+
+
+def reverse_tree(struc, module, seen=None, depth=0, max_depth=None):
+    if seen is None:
+        seen = set()
+    # TODO: Reverse tree and find 'consequences' from module
 
 
 def rev_tree(struc, i=None, prev=None, depth=0):
@@ -89,7 +98,14 @@ def pop_tree(root_dir):
     return d
 
 if __name__ == '__main__':
-    module = sys.argv[1]
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('-m', '--module', dest='module', required=True)
+    parser.add_argument('-d', '--max-depth', dest='max_depth', default=None, type=int)
+#    module = sys.argv[1]
+
+    args = parser.parse_args()
     tree = pop_tree(root_dir)
-    find_tree(tree, module)
+
+    find_tree(tree, args.module, max_depth=args.max_depth)
 
