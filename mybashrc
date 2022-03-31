@@ -27,6 +27,7 @@ alias -- -='cd -'
 alias gg='git grep'
 alias g='grep -inRIs'
 alias gs='grep -iRIs'
+alias g-='git checkout -'
 alias gitbranches='for x in `echo odoo-*`;do cd $x; echo "`git rev-parse --abbrev-ref HEAD` - $x"; cd - > /dev/null; done | sort'
 
 
@@ -61,3 +62,8 @@ function modules_changed {
 }
 
 alias avail_modules='for x in `echo /usr/share/odoo-*/* /usr/share/odooext-*/* /usr/share/core-odoo/addons/*`; do [ -d $x ] && echo `basename $x`; done | sort'
+
+
+
+
+alias skog_mailcatcher='echo "OPEN FIREFOX ON LOCALHOST:6113"; ssh berema@uvenacc.skogsstyrelsen.se -L6113:10.16.110.13:1080'
