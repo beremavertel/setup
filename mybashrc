@@ -24,9 +24,9 @@ alias -- -='cd -'
 
 
 ## GIT
-alias gs='git status'
 alias gg='git grep'
 alias g='grep -inRIs'
+alias gs='grep -iRIs'
 alias gitbranches='for x in `echo odoo-*`;do cd $x; echo "`git rev-parse --abbrev-ref HEAD` - $x"; cd - > /dev/null; done | sort'
 
 
@@ -47,7 +47,9 @@ PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[0
 
 # ODOO-move
 alias olog='cd /var/log/odoo/'
-
+function ocd {
+    cd `find -L /usr/share/ -name $1`
+}
 
 function odoopsql {
     sudo su odoo -c "psql $1"
