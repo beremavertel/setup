@@ -55,6 +55,10 @@ function ocd {
 function odoopsql {
     sudo su odoo -c "psql $1"
 }
+function odoomodules {
+    [ ! -z "$1" ] && sudo su odoo -c "psql $1 -c \"select name from ir_module_module where state='installed' order by name asc\""
+    [ -z "$1" ] && echo "Usage: odoomodules databasename"
+}
 
 
 function modules_changed {
