@@ -56,7 +56,7 @@ function odoopsql {
     sudo su odoo -c "psql $1"
 }
 function odoomodules {
-    [ ! -z "$1" ] && sudo su odoo -c "psql $1 -c \"select name from ir_module_module where state='installed' order by name asc\""
+    [ ! -z "$1" ] && sudo su odoo -c "psql $1 -c \"select name from ir_module_module where state='installed' order by name asc\"" | tail -n +3 | head -n -2 | sed 's/^ //g' | less
     [ -z "$1" ] && echo "Usage: odoomodules databasename"
 }
 
