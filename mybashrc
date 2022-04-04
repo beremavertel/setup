@@ -10,7 +10,7 @@ alias ö='l'
 
 
 #gohome
-alias gohome='ssh emanuel@192.168.1.175'
+alias gohome='ssh emanuel@192.168.1.164'
 alias utv14='ssh berema@utv14'
 alias odoo142='ssh odoo142'
 alias azzar='ssh berema@azzar.net'
