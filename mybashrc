@@ -14,6 +14,8 @@ alias gohome='ssh emanuel@192.168.1.164'
 alias utv14='ssh berema@utv14'
 alias odoo142='ssh odoo142'
 alias azzar='ssh berema@azzar.net'
+alias saltmaster='ssh emanuel@saltmaster'
+alias saltslave1='ssh emanuel@saltslave1'
 
 
 ## CD
@@ -71,4 +73,4 @@ function modules_changed {
 alias avail_modules='for x in `echo /usr/share/odoo-*/* /usr/share/odooext-*/* /usr/share/core-odoo/addons/*`; do [ -d $x ] && echo `basename $x`; done | sort'
 alias avail_projects='for x in `echo /usr/share/odoo-*/* /usr/share/odooext-*/* /usr/share/core-odoo/addons/*`; do [ -d $x ] && echo `dirname $x`; done | sort'
 
-alias skog_mailcatcher='echo "OPEN FIREFOX ON LOCALHOST:6113"; ssh berema@uvenacc.skogsstyrelsen.se -L6113:10.16.110.13:1080'
+alias skog_mailcatcher='echo "OPEN FIREFOX ON http://localhost:6113"; ssh berema@uvenacc.skogsstyrelsen.se -L6113:10.16.110.13:1080'
