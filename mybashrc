@@ -30,8 +30,8 @@ alias gg='git grep'
 alias g='grep -inRIs'
 alias gs='grep -iRIs'
 alias g-='git checkout -'
-alias gitbranches='for x in `echo odoo-*`;do cd $x; echo "`git rev-parse --abbrev-ref HEAD` - $x"; cd - > /dev/null; done | sort'
-
+alias gitbranches='for x in `echo /usr/share/odoo-*`;do cd $x; echo "`git rev-parse --abbrev-ref HEAD` - $x"; cd - > /dev/null; done | sort'
+alias gitunsafe='for x in `echo /usr/share/odoo*`;do git config --global --add safe.directory $x; done'
 
 ## PS1
 function __current_branch__ {
