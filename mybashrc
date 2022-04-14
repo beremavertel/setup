@@ -1,6 +1,7 @@
 ## BASHRC
 alias rebash='. ~/.bashrc'
 alias bashedit='vi ~/setup/mybashrc; rebash'
+alias update_setup='cd ~/setup; git pull; rebash; cd - > /dev/null'
 
 export PATH="~/setup/scripts:$PATH"
 
@@ -22,7 +23,7 @@ alias saltslave1='ssh emanuel@saltslave1'
 alias ..='cd ..'
 alias -- ...='cd ../..'
 alias -- ....='cd ../../..'
-alias -- -='cd -'
+alias -- -='cd - > /dev/null'
 
 
 ## GIT
