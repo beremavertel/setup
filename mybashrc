@@ -75,3 +75,6 @@ alias avail_modules='for x in `echo /usr/share/odoo-*/* /usr/share/odooext-*/* /
 alias avail_projects='for x in `echo /usr/share/odoo-*/* /usr/share/odooext-*/* /usr/share/core-odoo/addons/*`; do [ -d $x ] && echo `dirname $x`; done | sort'
 
 alias skog_mailcatcher='echo "OPEN FIREFOX ON http://localhost:6113"; ssh berema@uvenacc.skogsstyrelsen.se -L6113:10.16.110.13:1080'
+
+
+alias python=python3
