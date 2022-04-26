@@ -14,24 +14,43 @@ REGEXES = ['odoo-*/*/__manifest__.py', 'odooext-*/*/__manifest__.py']
 CORE_REGEX = ['core-odoo/addons/*/__manifest__.py']
 
 
-PARSED_FILES = {}
-def parse_file(path):
-    if path not in PARSED_FILES:
+class FileParser():
+    def __init__(self):
+        self.parsed_files = {}
+        self.read_files = {}
+        self.known_fileext = ['.py', '.xml']
+
+    def parse_file(self, path):
         _, fileext = os.path.splitext(path)
-        data = read_file(path)
-        parsed_data = []
-        if fileext == '.py':
-            parsed_data = [x for x in data.split("\n") if not x.startswith("#")]
+        if path not in self.parsed_files:
+            parsed_data = []
+            if fileext in self.known_fileext:
+                data = self.read_file(path)
+                if fileext == '.py':
+                    parsed_data = [x for x in data.split("\n") if not x.startswith("#")]
+                elif fileext == '.xml':
+                    try:
+                        from lxml import etree
+                        tree = etree.fromstring(data)
+                        etree.strip_tags(tree, etree.Comment)
+                        parsed_data = etree.tostring(tree).decode("utf-8").split("\n")
+#                        parsed_data = str(etree.tostring(tree, encoding="utf8")).split("\n")
 
-        PARSED_FILES[path] = parsed_data
-    return PARSED_FILES.get(path)
+                    except Exception as e:
+                        pass #_logger.error(f"Error reading file {path}: {e}")
+            self.parsed_files[path] = parsed_data
+        return self.parsed_files.get(path)
 
-READ_FILES = {}
-def read_file(path):
-    if path not in READ_FILES:
-        with open(path) as f:
-            READ_FILES[path] = f.read()
-    return READ_FILES.get(path)
+    def read_file(self, path):
+        if path not in self.read_files:
+            try:
+                with open(path) as f:
+                    self.read_files[path] = f.read()
+            except Exception as e:
+                _logger.error(f"Error reading file {path}: {e}")
+        return self.read_files.get(path)
+
+file_parser = FileParser()
 
 
 def find_modules(root_directory=ROOT_PATH, include_core=True):
@@ -53,7 +72,7 @@ class Module():
 
     def parse_deps(self):
         if not self.depends:
-            manifest = literal_eval(read_file(self.path))
+            manifest = literal_eval(file_parser.read_file(self.path))
             if manifest and "depends" in manifest:
                 self.depends = set(manifest.get("depends"))
         return self.depends
@@ -64,8 +83,8 @@ class Module():
         inherit_check = re.compile("^ *_inherit *= *[\"'].*[\"'] *$")
         name_check = re.compile("^ *_name *= *[\"'].*[\"'] *$")
 
-        for path in glob(os.path.join(os.path.dirname(self.path), "**/*.py"), recursive=True):
-            data = parse_file(path)
+        for path in glob(os.path.join(os.path.dirname(self.path), "**/*"), recursive=True):
+            data = file_parser.parse_file(path)
             for line in data:
                 if re.match(inherit_check, line): #"_inherit =" in line:
                     if "{" not in line and "[" not in line: # one line inherit
@@ -80,9 +99,6 @@ class Module():
                     res = re.search(name_regex, line)
                     if res:
                         self.names.add(res.groups()[0])
-
-    #    if self.names and self.inherits:
-    #        print(f"{self.name} {self.names} {self.inherits}")
 
     def validate_names(self, modules):
         for inherit in self.inherits:
