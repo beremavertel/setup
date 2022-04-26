@@ -4,6 +4,7 @@ import os
 import logging
 import sys
 
+from lxml import etree
 from ast import literal_eval
 from glob import glob
 
@@ -31,12 +32,8 @@ class FileParser():
                     parsed_data = [x for x in data.split("\n") if not x.startswith("#")]
                 elif fileext == '.xml':
                     try:
-                        from lxml import etree
-                        tree = etree.fromstring(data)
-                        etree.strip_tags(tree, etree.Comment)
-                        parsed_data = etree.tostring(tree).decode("utf-8").split("\n")
-#                        parsed_data = str(etree.tostring(tree, encoding="utf8")).split("\n")
-
+                        parsed_data = etree.fromstring(data)
+                        etree.strip_tags(parsed_data, etree.Comment)
                     except Exception as e:
                         pass #_logger.error(f"Error reading file {path}: {e}")
             self.parsed_files[path] = parsed_data
@@ -79,27 +76,46 @@ class Module():
         return self.depends
 
     def parse_code(self):
-        name_regex = re.compile("[\"']([^\"']*)[\"']")
+#<record id="project_archive"...>
+#<field name="inherit_id" ref="project.view_project_kanban" />
+        regexes = {}
+        regexes["py"] = {}
+        regexes["xml"] = {}
 
-        inherit_check = re.compile("^ *_inherit *= *[\"'].*[\"'] *$")
-        name_check = re.compile("^ *_name *= *[\"'].*[\"'] *$")
+        regexes["py"]["name"] = re.compile("[\"']([^\"']*)[\"']")
+        regexes["py"]["_inherit"] = re.compile("^ *_inherit *= *[\"'].*[\"'] *$")
+        regexes["py"]["_name"] = re.compile("^ *_name *= *[\"'].*[\"'] *$")
 
         for path in glob(os.path.join(os.path.dirname(self.path), "**/*"), recursive=True):
             data = file_parser.parse_file(path)
-            for line in data:
-                if re.match(inherit_check, line): #"_inherit =" in line:
-                    if "{" not in line and "[" not in line: # one line inherit
-                        res = re.search(name_regex, line)
-                        if res:
-                            self.inherits.add(res.groups()[0])
+            _, ext = os.path.splitext(path)
+            if ext == ".py":
+                self.parse_py(data, regexes["py"])
+            elif ext == ".xml":
+                self.parse_xml(data, regexes["xml"])
 
-                    else:
-                        pass
-                        # TODO: Multiline inheritance
-                if re.match(name_check, line):
-                    res = re.search(name_regex, line)
+    def parse_py(self, data, regexes):
+        for line in data:
+            if re.match(regexes["_inherit"], line): #"_inherit =" in line:
+                if "{" not in line and "[" not in line: # one line inherit
+                    res = re.search(regexes["name"], line)
                     if res:
-                        self.names.add(res.groups()[0])
+                        self.inherits.add(res.groups()[0])
+
+                else:
+                    pass
+                    # TODO: Multiline inheritance
+            if re.match(regexes["_name"], line):
+                res = re.search(regexes["name"], line)
+                if res:
+                    self.names.add(res.groups()[0])
+
+    def parse_xml(self, data, regexes):
+        if not data:
+            return
+        self.names.update(f"{self.name}.{x}" for x in data.xpath("//record/@id") if x)
+        self.inherits.update(data.xpath("//field[@name='inherit_id']/@ref"))
+
 
     def validate_names(self, modules):
         for inherit in self.inherits:
