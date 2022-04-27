@@ -10,11 +10,16 @@ from glob import glob
 
 _logger = logging.getLogger(__file__)
 
-
+verbose = True
 ROOT_PATH = "/usr/share"
 REGEXES = ['odoo-*/*/__manifest__.py', 'odooext-*/*/__manifest__.py']
 CORE_REGEX = ['core-odoo/addons/*/__manifest__.py']
+RECURSIVE_ERROR = set()
 
+def recursive_error(name):
+    if name[-1] not in RECURSIVE_ERROR:
+        RECURSIVE_ERROR.add(name[-1])
+        _logger.error(f"Recursive import error for module {name}")
 
 class FileParser():
     def __init__(self):
@@ -57,6 +62,13 @@ def find_modules(root_directory=ROOT_PATH, include_core=True):
         for manifest_path in glob(path):
             module_name = os.path.basename(os.path.dirname(manifest_path))
             yield module_name, manifest_path
+
+def find_defining_modules(name, modules):
+    for module in modules.values():
+        if name in module.names:
+            yield module.name
+
+
 
 class Module():
     def __init__(self, name, path):
@@ -115,21 +127,30 @@ class Module():
         count = 0
         total = len(self.inherits)
         for inherit in self.inherits:
-            if not self.validate_name(inherit, modules, first_call=True):
+            if not self.validate_name(inherit, modules, history=[], first_call=True):
                 count += 1
-                print(f"{self.package} {self.name} missing dependency for {inherit}")
+                message = f"{self.package}/{self.name} missing dependency for {inherit}"
+                if verbose:
+                    defining_modules = ", ".join(find_defining_modules(inherit, modules))
+                    message += f" (defined in modules: [{defining_modules}])"
+                print(message)
         return count, total
 
-    def validate_name(self, name, modules, first_call=False):
+    def validate_name(self, name, modules, history, first_call=False):
         if name in self.names:
             return True
+        if self.name in history:
+            recursive_error(history)
+            return False
+        else:
+            history.append(self.name)
         if first_call:
             internal_name = f"{self.name}.{name}"
             if internal_name in self.names:
                 return True
         for dep in self.depends:
             dep_module = modules.get(dep)
-            if dep_module and dep_module.validate_name(name, modules):
+            if dep_module and dep_module.validate_name(name, modules, history.copy()):
                 return True
         return False
 
