@@ -82,10 +82,9 @@ class Module():
         regexes["py"] = {}
         regexes["xml"] = {}
 
-        regexes["py"]["name"] = re.compile("[\"']([^\"']*)[\"']")
-        regexes["py"]["_inherit"] = re.compile("^ *_inherit *= *[\"'].*[\"'] *$")
+        regexes["py"]["_inherit"] = re.compile("^ *_inherit *= *[\"']([^\"']*)[\"'] *$")
         regexes["py"]["comodel_name"] = re.compile("^ *comodel_name=[\"']([^\"']*)[\"'].*$")
-        regexes["py"]["_name"] = re.compile("^ *_name *= *[\"'].*[\"'] *$")
+        regexes["py"]["_name"] = re.compile("^ *_name *= *[\"']([^\"']*)[\"'] *$")
 
         for path in glob(os.path.join(os.path.dirname(self.path), "**/*"), recursive=True):
             data = file_parser.parse_file(path)
@@ -97,13 +96,11 @@ class Module():
 
     def parse_py(self, data, regexes):
         for line in data:
-            if re.match(regexes["_inherit"], line): #"_inherit =" in line:
-                if res := re.search(regexes["name"], line):
-                    self.inherits.add(res.groups()[0])
+            if res := re.search(regexes["_inherit"], line): #"_inherit =" in line:
+                self.inherits.add(res.groups()[0])
 
-            if re.match(regexes["_name"], line):
-                if res := re.search(regexes["name"], line):
-                    self.names.add(res.groups()[0])
+            if res := re.search(regexes["_name"], line):
+                self.names.add(res.groups()[0])
 
             if res := re.search(regexes["comodel_name"], line):
                 self.inherits.add(res.groups()[0])
