@@ -84,6 +84,7 @@ class Module():
 
         regexes["py"]["name"] = re.compile("[\"']([^\"']*)[\"']")
         regexes["py"]["_inherit"] = re.compile("^ *_inherit *= *[\"'].*[\"'] *$")
+        regexes["py"]["comodel_name"] = re.compile("^ *comodel_name=[\"']([^\"']*)[\"'].*$")
         regexes["py"]["_name"] = re.compile("^ *_name *= *[\"'].*[\"'] *$")
 
         for path in glob(os.path.join(os.path.dirname(self.path), "**/*"), recursive=True):
@@ -103,6 +104,9 @@ class Module():
             if re.match(regexes["_name"], line):
                 if res := re.search(regexes["name"], line):
                     self.names.add(res.groups()[0])
+
+            if res := re.search(regexes["comodel_name"], line):
+                self.inherits.add(res.groups()[0])
 
     def parse_xml(self, data, regexes):
         if not data:
