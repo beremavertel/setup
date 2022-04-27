@@ -10,7 +10,7 @@ from glob import glob
 
 _logger = logging.getLogger(__file__)
 
-verbose = True
+verbose = False
 ROOT_PATH = "/usr/share"
 REGEXES = ['odoo-*/*/__manifest__.py', 'odooext-*/*/__manifest__.py']
 CORE_REGEX = ['core-odoo/addons/*/__manifest__.py']
