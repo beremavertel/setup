@@ -111,13 +111,21 @@ class Module():
         self.inherits.update(data.xpath("//field[@name='inherit_id']/@ref"))
 
     def validate_names(self, modules):
+        count = 0
+        total = len(self.inherits)
         for inherit in self.inherits:
-            if not self.validate_name(inherit, modules):
+            if not self.validate_name(inherit, modules, first_call=True):
+                count += 1
                 print(f"{self.package} {self.name} missing dependency for {inherit}")
+        return count, total
 
-    def validate_name(self, name, modules):
+    def validate_name(self, name, modules, first_call=False):
         if name in self.names:
             return True
+        if first_call:
+            internal_name = f"{self.name}.{name}"
+            if internal_name in self.names:
+                return True
         for dep in self.depends:
             dep_module = modules.get(dep)
             if dep_module and dep_module.validate_name(name, modules):
@@ -132,5 +140,17 @@ if __name__ == "__main__":
         module.parse_code()
         module.parse_deps()
 
-    for module in modules.values():
-        module.validate_names(modules)
+    count = 0
+    total = 0
+    try:
+        with open("modules") as f:
+            module_list = (modules[x.strip()] for x in f.read().split("\n") if x.strip())
+    except:
+        module_list = modules.values()
+
+    for module in module_list:
+           dcount, dtotal = module.validate_names(modules)
+           count += dcount
+           total += dtotal
+
+    print(f"Found {count} errors in {total} checks")
