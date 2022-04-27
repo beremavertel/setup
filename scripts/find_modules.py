@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 import re
 import os
 import logging
@@ -20,19 +20,19 @@ class FileParser():
     def __init__(self):
         self.parsed_files = {}
         self.read_files = {}
-        self.known_fileext = ['.py', '.xml']
+        self.known_fileext = [".xml", '.py']
 
     def parse_file(self, path):
         _, fileext = os.path.splitext(path)
         if path not in self.parsed_files:
             parsed_data = []
             if fileext in self.known_fileext:
-                data = self.read_file(path)
                 if fileext == '.py':
+                    data = self.read_file(path)
                     parsed_data = [x for x in data.split("\n") if not x.startswith("#")]
                 elif fileext == '.xml':
                     try:
-                        parsed_data = etree.fromstring(data)
+                        parsed_data = etree.parse(path)
                         etree.strip_tags(parsed_data, etree.Comment)
                     except Exception as e:
                         pass #_logger.error(f"Error reading file {path}: {e}")
@@ -97,17 +97,11 @@ class Module():
     def parse_py(self, data, regexes):
         for line in data:
             if re.match(regexes["_inherit"], line): #"_inherit =" in line:
-                if "{" not in line and "[" not in line: # one line inherit
-                    res = re.search(regexes["name"], line)
-                    if res:
-                        self.inherits.add(res.groups()[0])
+                if res := re.search(regexes["name"], line):
+                    self.inherits.add(res.groups()[0])
 
-                else:
-                    pass
-                    # TODO: Multiline inheritance
             if re.match(regexes["_name"], line):
-                res = re.search(regexes["name"], line)
-                if res:
+                if res := re.search(regexes["name"], line):
                     self.names.add(res.groups()[0])
 
     def parse_xml(self, data, regexes):
@@ -115,7 +109,6 @@ class Module():
             return
         self.names.update(f"{self.name}.{x}" for x in data.xpath("//record/@id") if x)
         self.inherits.update(data.xpath("//field[@name='inherit_id']/@ref"))
-
 
     def validate_names(self, modules):
         for inherit in self.inherits:
