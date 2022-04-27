@@ -168,7 +168,7 @@ if __name__ == "__main__":
         with open("modules") as f:
             module_list = (modules[x.strip()] for x in f.read().split("\n") if x.strip())
     except:
-        module_list = modules.values()
+        module_list = sorted(modules.values(), key=lambda x: x.package + "_"*100 + x.name)
 
     for module in module_list:
            dcount, dtotal = module.validate_names(modules)
