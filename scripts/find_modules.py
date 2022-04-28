@@ -4,6 +4,7 @@ import os
 import logging
 import sys
 
+from collections import defaultdict
 from lxml import etree
 from ast import literal_eval
 from glob import glob
@@ -101,18 +102,7 @@ class Module():
         return self.depends
 
     def parse_code(self):
-#<record id="project_archive"...>
-#<field name="inherit_id" ref="project.view_project_kanban" />
-        regexes = {}
-        regexes["py"] = {}
-        regexes["py"]["singleline"] = {}
-        regexes["py"]["singleline"]["inherits"] = []
-        regexes["py"]["singleline"]["names"] = []
-        regexes["py"]["multiline"] = {}
-        regexes["py"]["multiline"]["inherits"] = []
-
-
-        regexes["xml"] = {}
+        regexes = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
 
         regexes["py"]["singleline"]["inherits"].append(re.compile(f"^ *_inherit *= *[{QUOTE}]([^{QUOTE}]*)[{QUOTE}] *$"))
         regexes["py"]["singleline"]["inherits"].append(re.compile(f"^ *comodel_name=[{QUOTE}]([^{QUOTE}]*)[{QUOTE}].*$"))
