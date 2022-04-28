@@ -16,8 +16,8 @@ include_test_code = False
 validate_core = True
 
 ROOT_PATH = "/usr/share"
-REGEXES = ['odoo-*/*/__manifest__.py', 'odooext-*/*/__manifest__.py']
-CORE_REGEX = ['core-odoo/addons/*/__manifest__.py']
+REGEXES = ["odoo-*/*/__manifest__.py", "odooext-*/*/__manifest__.py"]
+CORE_REGEX = ["core-odoo/addons/*/__manifest__.py"]
 
 QUOTE = "\"'"
 
@@ -30,31 +30,37 @@ RECURSIVE_ERROR = set()
 # * Add flags to ease use (for example, verbose)
 # * Add psql-integration to find active modules
 
+
 def recursive_error(name):
     if name[-1] not in RECURSIVE_ERROR:
         RECURSIVE_ERROR.add(name[-1])
         _logger.error(f"Recursive import error for module {name}")
 
-class FileParser():
+
+class FileParser:
     def __init__(self):
         self.parsed_files = {}
         self.read_files = {}
-        self.known_fileext = [".xml", '.py']
+        self.known_fileext = [".xml", ".py"]
 
     def parse_file(self, path):
         _, fileext = os.path.splitext(path)
         if path not in self.parsed_files:
             parsed_data = []
             if fileext in self.known_fileext:
-                if fileext == '.py':
+                if fileext == ".py":
                     data = self.read_file(path)
-                    parsed_data = [x.strip() for x in data.split("\n") if not x.strip().startswith("#")]
-                elif fileext == '.xml':
+                    parsed_data = [
+                        x.strip()
+                        for x in data.split("\n")
+                        if not x.strip().startswith("#")
+                    ]
+                elif fileext == ".xml":
                     try:
                         parsed_data = etree.parse(path)
                         etree.strip_tags(parsed_data, etree.Comment)
                     except Exception as e:
-                        pass #_logger.error(f"Error reading file {path}: {e}")
+                        pass  # _logger.error(f"Error reading file {path}: {e}")
             self.parsed_files[path] = parsed_data
         return self.parsed_files.get(path)
 
@@ -67,6 +73,7 @@ class FileParser():
                 _logger.error(f"Error reading file {path}: {e}")
         return self.read_files.get(path)
 
+
 file_parser = FileParser()
 
 
@@ -77,14 +84,14 @@ def find_modules(root_directory=ROOT_PATH, include_core=True):
             module_name = os.path.basename(os.path.dirname(manifest_path))
             yield module_name, manifest_path
 
+
 def find_defining_modules(name, modules):
     for module in modules.values():
         if name in module.names:
             yield module.name
 
 
-
-class Module():
+class Module:
     def __init__(self, name, path):
         self.name = name
         self.path = path
@@ -104,18 +111,38 @@ class Module():
     def parse_code(self):
         regexes = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
 
-        regexes["py"]["singleline"]["inherits"].append(re.compile(f"^ *_inherit *= *[{QUOTE}]([^{QUOTE}]*)[{QUOTE}] *$"))
-        regexes["py"]["singleline"]["inherits"].append(re.compile(f"^ *comodel_name=[{QUOTE}]([^{QUOTE}]*)[{QUOTE}].*$"))
-        regexes["py"]["singleline"]["inherits"].append(re.compile(f"^.*request\.env\[[{QUOTE}]([^{QUOTE}]*)[{QUOTE}]\].*$"))
-        regexes["py"]["singleline"]["inherits"].append(re.compile(f"^.*self\.env\[[{QUOTE}]([^{QUOTE}]*)[{QUOTE}]\].*$"))
+        regexes["py"]["singleline"]["inherits"].append(
+            re.compile(f"^ *_inherit *= *[{QUOTE}]([^{QUOTE}]*)[{QUOTE}] *$")
+        )
+        regexes["py"]["singleline"]["inherits"].append(
+            re.compile(f"^ *comodel_name=[{QUOTE}]([^{QUOTE}]*)[{QUOTE}].*$")
+        )
+        regexes["py"]["singleline"]["inherits"].append(
+            re.compile(f"^.*request\.env\[[{QUOTE}]([^{QUOTE}]*)[{QUOTE}]\].*$")
+        )
+        regexes["py"]["singleline"]["inherits"].append(
+            re.compile(f"^.*self\.env\[[{QUOTE}]([^{QUOTE}]*)[{QUOTE}]\].*$")
+        )
 
-        regexes["py"]["multiline"]["inherits"].append(f"self\.env\[[{QUOTE}]([^{QUOTE}]*)[{QUOTE}]\]")
-        regexes["py"]["multiline"]["inherits"].append(f"request\.env\[[{QUOTE}]([^{QUOTE}]*)[{QUOTE}]\]")
+        regexes["py"]["multiline"]["inherits"].append(
+            f"self\.env\[[{QUOTE}]([^{QUOTE}]*)[{QUOTE}]\]"
+        )
+        regexes["py"]["multiline"]["inherits"].append(
+            f"request\.env\[[{QUOTE}]([^{QUOTE}]*)[{QUOTE}]\]"
+        )
 
-        regexes["py"]["singleline"]["names"].append(re.compile(f"^ *_name *= *[{QUOTE}]([^{QUOTE}]*)[{QUOTE}] *$"))
-        regexes["py"]["singleline"]["names"].append(re.compile(f"^ *_name *= _description = *[{QUOTE}]([^{QUOTE}]*)[{QUOTE}] *$")) # Special case for core
+        regexes["py"]["singleline"]["names"].append(
+            re.compile(f"^ *_name *= *[{QUOTE}]([^{QUOTE}]*)[{QUOTE}] *$")
+        )
+        regexes["py"]["singleline"]["names"].append(
+            re.compile(
+                f"^ *_name *= _description = *[{QUOTE}]([^{QUOTE}]*)[{QUOTE}] *$"
+            )
+        )  # Special case for core
 
-        for path in glob(os.path.join(os.path.dirname(self.path), "**/*"), recursive=True):
+        for path in glob(
+            os.path.join(os.path.dirname(self.path), "**/*"), recursive=True
+        ):
             if include_test_code is False and "/tests/" in path:
                 continue
             data = file_parser.parse_file(path)
@@ -151,7 +178,9 @@ class Module():
                 count += 1
                 message = f"{self.package}/{self.name} missing dependency for {inherit}"
                 if verbose:
-                    if defining_modules := ", ".join(find_defining_modules(inherit, modules)):
+                    if defining_modules := ", ".join(
+                        find_defining_modules(inherit, modules)
+                    ):
                         message += f" (defined in modules: [{defining_modules}])"
                     else:
                         message += " (not defined in any module)"
@@ -176,6 +205,7 @@ class Module():
                 return True
         return False
 
+
 if __name__ == "__main__":
     modules = {}
     for name, path in find_modules():
@@ -188,12 +218,16 @@ if __name__ == "__main__":
     total = 0
     try:
         with open("modules") as f:
-            module_list = (modules[x.strip()] for x in f.read().split("\n") if x.strip())
+            module_list = (
+                modules[x.strip()] for x in f.read().split("\n") if x.strip()
+            )
     except:
-        module_list = sorted(modules.values(), key=lambda x: x.package + "_"*100 + x.name)
+        module_list = sorted(
+            modules.values(), key=lambda x: x.package + "_" * 100 + x.name
+        )
 
     for module in module_list:
-        if validate_core is False and module.package == 'addons':
+        if validate_core is False and module.package == "addons":
             continue
         dcount, dtotal = module.validate_names(modules)
         count += dcount
