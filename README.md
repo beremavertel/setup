@@ -21,7 +21,7 @@ $ echo $PATH
 /path/to/dir:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
 $ export PATH=$PATH:~/setup/scripts
 $ echo $PATH
-/path/to/dir:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/setup/scripts
+/path/to/dir:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:~/setup/scripts
 ```
 
 Source: https://hackprogramming.com/2-ways-to-permanently-set-path-variable-in-ubuntu/
