@@ -136,9 +136,7 @@ class Module:
             re.compile(f"^ *_name *= *{QUOTE}({NOT_QUOTE}*){QUOTE} *$")
         )
         regexes["py"]["singleline"]["names"].append(
-            re.compile(
-                f"^ *_name *= _description = *{QUOTE}({NOT_QUOTE}*){QUOTE} *$"
-            )
+            re.compile(f"^ *_name *= _description = *{QUOTE}({NOT_QUOTE}*){QUOTE} *$")
         )  # Special case for core
 
         for path in glob(
