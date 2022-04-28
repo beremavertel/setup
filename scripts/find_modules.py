@@ -92,11 +92,17 @@ class Module():
 #<field name="inherit_id" ref="project.view_project_kanban" />
         regexes = {}
         regexes["py"] = {}
+        regexes["py"]["inherit"] = []
+        regexes["py"]["names"] = []
+
         regexes["xml"] = {}
 
-        regexes["py"]["_inherit"] = re.compile("^ *_inherit *= *[\"']([^\"']*)[\"'] *$")
-        regexes["py"]["comodel_name"] = re.compile("^ *comodel_name=[\"']([^\"']*)[\"'].*$")
-        regexes["py"]["_name"] = re.compile("^ *_name *= *[\"']([^\"']*)[\"'] *$")
+        regexes["py"]["inherit"].append(re.compile("^ *_inherit *= *[\"']([^\"']*)[\"'] *$"))
+        regexes["py"]["inherit"].append(re.compile("^ *comodel_name=[\"']([^\"']*)[\"'].*$"))
+        regexes["py"]["inherit"].append(re.compile("^.*request\.env\[[\"']([^\"']*)[\"']\].*$"))
+        regexes["py"]["inherit"].append(re.compile("^.*self\.env\[[\"']([^\"']*)[\"']\].*$"))
+
+        regexes["py"]["names"].append(re.compile("^ *_name *= *[\"']([^\"']*)[\"'] *$"))
 
         for path in glob(os.path.join(os.path.dirname(self.path), "**/*"), recursive=True):
             data = file_parser.parse_file(path)
@@ -108,14 +114,13 @@ class Module():
 
     def parse_py(self, data, regexes):
         for line in data:
-            if res := re.search(regexes["_inherit"], line): #"_inherit =" in line:
-                self.inherits.add(res.groups()[0])
+            for inherit in regexes["inherit"]:
+                if res := re.search(inherit, line):
+                    self.inherits.add(res.groups()[0])
 
-            if res := re.search(regexes["_name"], line):
-                self.names.add(res.groups()[0])
-
-            if res := re.search(regexes["comodel_name"], line):
-                self.inherits.add(res.groups()[0])
+            for name in regexes["names"]:
+                if res := re.search(inherit, line):
+                    self.names.add(res.groups()[0])
 
     def parse_xml(self, data, regexes):
         if not data:
