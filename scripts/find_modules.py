@@ -19,7 +19,8 @@ ROOT_PATH = "/usr/share"
 REGEXES = ["odoo-*/*/__manifest__.py", "odooext-*/*/__manifest__.py"]
 CORE_REGEX = ["core-odoo/addons/*/__manifest__.py"]
 
-QUOTE = "\"'"
+QUOTE = "[\"']"
+NOT_QUOTE = "[^\"']"
 
 RECURSIVE_ERROR = set()
 
@@ -112,31 +113,31 @@ class Module:
         regexes = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
 
         regexes["py"]["singleline"]["inherits"].append(
-            re.compile(f"^ *_inherit *= *[{QUOTE}]([^{QUOTE}]*)[{QUOTE}] *$")
+            re.compile(f"^ *_inherit *= *{QUOTE}({NOT_QUOTE}*){QUOTE} *$")
         )
         regexes["py"]["singleline"]["inherits"].append(
-            re.compile(f"^ *comodel_name=[{QUOTE}]([^{QUOTE}]*)[{QUOTE}].*$")
+            re.compile(f"^ *comodel_name={QUOTE}({NOT_QUOTE}*){QUOTE}.*$")
         )
         regexes["py"]["singleline"]["inherits"].append(
-            re.compile(f"^.*request\.env\[[{QUOTE}]([^{QUOTE}]*)[{QUOTE}]\].*$")
+            re.compile(f"^.*request\.env\[{QUOTE}({NOT_QUOTE}*){QUOTE}\].*$")
         )
         regexes["py"]["singleline"]["inherits"].append(
-            re.compile(f"^.*self\.env\[[{QUOTE}]([^{QUOTE}]*)[{QUOTE}]\].*$")
+            re.compile(f"^.*self\.env\[{QUOTE}({NOT_QUOTE}*){QUOTE}\].*$")
         )
 
         regexes["py"]["multiline"]["inherits"].append(
-            f"self\.env\[[{QUOTE}]([^{QUOTE}]*)[{QUOTE}]\]"
+            f"self\.env\[{QUOTE}({NOT_QUOTE}*){QUOTE}\]"
         )
         regexes["py"]["multiline"]["inherits"].append(
-            f"request\.env\[[{QUOTE}]([^{QUOTE}]*)[{QUOTE}]\]"
+            f"request\.env\[{QUOTE}({NOT_QUOTE}*){QUOTE}\]"
         )
 
         regexes["py"]["singleline"]["names"].append(
-            re.compile(f"^ *_name *= *[{QUOTE}]([^{QUOTE}]*)[{QUOTE}] *$")
+            re.compile(f"^ *_name *= *{QUOTE}({NOT_QUOTE}*){QUOTE} *$")
         )
         regexes["py"]["singleline"]["names"].append(
             re.compile(
-                f"^ *_name *= _description = *[{QUOTE}]([^{QUOTE}]*)[{QUOTE}] *$"
+                f"^ *_name *= _description = *{QUOTE}({NOT_QUOTE}*){QUOTE} *$"
             )
         )  # Special case for core
 
