@@ -44,7 +44,7 @@ class FileParser():
             if fileext in self.known_fileext:
                 if fileext == '.py':
                     data = self.read_file(path)
-                    parsed_data = [x for x in data.split("\n") if not x.startswith("#")]
+                    parsed_data = [x.strip() for x in data.split("\n") if not x.strip().startswith("#")]
                 elif fileext == '.xml':
                     try:
                         parsed_data = etree.parse(path)
