@@ -13,7 +13,9 @@ root_dir = "/usr/share"
 
 def _find_manifests(directory):
     files = []
-    for file in glob.iglob(os.path.join(directory, '**/__manifest__.py'), recursive=True):
+    for file in glob.iglob(
+        os.path.join(directory, "**/__manifest__.py"), recursive=True
+    ):
         files.append(file)
     return files
 
@@ -23,7 +25,9 @@ def _read_manif(path):
     mod_path = "/".join(path.split("/")[:-1])
     with open(path) as f:
         rows = f.read().split("\n")
-    cleaned = "".join([row.split("#")[0] for row in rows if not row.strip().startswith("#")])
+    cleaned = "".join(
+        [row.split("#")[0] for row in rows if not row.strip().startswith("#")]
+    )
     cleaned = cleaned.replace("\t", " ").replace("'", '"')
     old_cleaned = None
 
@@ -32,12 +36,12 @@ def _read_manif(path):
         cleaned = cleaned.replace("  ", " ")
 
     try:
-        i = cleaned.index("\"depends")
+        i = cleaned.index('"depends')
         if i > 0:
             cleaned = cleaned[i:]
         i = cleaned.index("]")
         if i > 0:
-            cleaned = cleaned[:i+1]
+            cleaned = cleaned[: i + 1]
         i = cleaned.index("[")
         if i > 0:
             cleaned = cleaned[i:]
@@ -59,7 +63,7 @@ def find_tree(struc, module, depth=0, max_depth=None):
         print(f"{space}{module}")
         for x in dep:
             calc_tree[x] = max(depth, calc_tree[x])
-            missing.update(find_tree(struc, x, depth+1, max_depth))
+            missing.update(find_tree(struc, x, depth + 1, max_depth))
 
     if depth == 0 and missing:
         print("Missing modules:")
@@ -83,9 +87,8 @@ def rev_tree(struc, i=None, prev=None, depth=0):
             continue
         if prev is None or k in struc and prev in struc[k][1]:
             print(f"{space}{k}")
-            rev_tree(struc, i-1, k, depth+1)
-        #print(struc[k])
-
+            rev_tree(struc, i - 1, k, depth + 1)
+        # print(struc[k])
 
 
 def pop_tree(root_dir):
@@ -97,15 +100,15 @@ def pop_tree(root_dir):
         d[a] = (p, b)
     return d
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('-m', '--module', dest='module', required=True)
-    parser.add_argument('-d', '--max-depth', dest='max_depth', default=None, type=int)
-#    module = sys.argv[1]
+    parser.add_argument("-m", "--module", dest="module", required=True)
+    parser.add_argument("-d", "--max-depth", dest="max_depth", default=None, type=int)
+    #    module = sys.argv[1]
 
     args = parser.parse_args()
     tree = pop_tree(root_dir)
 
     find_tree(tree, args.module, max_depth=args.max_depth)
-
