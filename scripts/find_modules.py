@@ -12,11 +12,14 @@ _logger = logging.getLogger(__file__)
 
 verbose = True
 include_test_code = False
-validate_core = False
+validate_core = True
 
 ROOT_PATH = "/usr/share"
 REGEXES = ['odoo-*/*/__manifest__.py', 'odooext-*/*/__manifest__.py']
 CORE_REGEX = ['core-odoo/addons/*/__manifest__.py']
+
+QUOTE = "\"'"
+
 RECURSIVE_ERROR = set()
 
 # TODO:
@@ -111,16 +114,16 @@ class Module():
 
         regexes["xml"] = {}
 
-        regexes["py"]["singleline"]["inherits"].append(re.compile("^ *_inherit *= *[\"']([^\"']*)[\"'] *$"))
-        regexes["py"]["singleline"]["inherits"].append(re.compile("^ *comodel_name=[\"']([^\"']*)[\"'].*$"))
-        regexes["py"]["singleline"]["inherits"].append(re.compile("^.*request\.env\[[\"']([^\"']*)[\"']\].*$"))
-        regexes["py"]["singleline"]["inherits"].append(re.compile("^.*self\.env\[[\"']([^\"']*)[\"']\].*$"))
+        regexes["py"]["singleline"]["inherits"].append(re.compile(f"^ *_inherit *= *[{QUOTE}]([^{QUOTE}]*)[{QUOTE}] *$"))
+        regexes["py"]["singleline"]["inherits"].append(re.compile(f"^ *comodel_name=[{QUOTE}]([^{QUOTE}]*)[{QUOTE}].*$"))
+        regexes["py"]["singleline"]["inherits"].append(re.compile(f"^.*request\.env\[[{QUOTE}]([^{QUOTE}]*)[{QUOTE}]\].*$"))
+        regexes["py"]["singleline"]["inherits"].append(re.compile(f"^.*self\.env\[[{QUOTE}]([^{QUOTE}]*)[{QUOTE}]\].*$"))
 
-        regexes["py"]["multiline"]["inherits"].append("self\.env\[[\"']([^\"']*)[\"']\]")
-        regexes["py"]["multiline"]["inherits"].append("request\.env\[[\"']([^\"']*)[\"']\]")
+        regexes["py"]["multiline"]["inherits"].append(f"self\.env\[[{QUOTE}]([^{QUOTE}]*)[{QUOTE}]\]")
+        regexes["py"]["multiline"]["inherits"].append(f"request\.env\[[{QUOTE}]([^{QUOTE}]*)[{QUOTE}]\]")
 
-        regexes["py"]["singleline"]["names"].append(re.compile("^ *_name *= *[\"']([^\"']*)[\"'] *$"))
-        regexes["py"]["singleline"]["names"].append(re.compile("^ *_name *= _description = *[\"']([^\"']*)[\"'] *$")) # Special case for core
+        regexes["py"]["singleline"]["names"].append(re.compile(f"^ *_name *= *[{QUOTE}]([^{QUOTE}]*)[{QUOTE}] *$"))
+        regexes["py"]["singleline"]["names"].append(re.compile(f"^ *_name *= _description = *[{QUOTE}]([^{QUOTE}]*)[{QUOTE}] *$")) # Special case for core
 
         for path in glob(os.path.join(os.path.dirname(self.path), "**/*"), recursive=True):
             if include_test_code is False and "/tests/" in path:
