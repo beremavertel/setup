@@ -120,6 +120,7 @@ class Module():
         regexes["py"]["multiline"]["inherits"].append("request\.env\[[\"']([^\"']*)[\"']\]")
 
         regexes["py"]["singleline"]["names"].append(re.compile("^ *_name *= *[\"']([^\"']*)[\"'] *$"))
+        regexes["py"]["singleline"]["names"].append(re.compile("^ *_name *= _description = *[\"']([^\"']*)[\"'] *$")) # Special case for core
 
         for path in glob(os.path.join(os.path.dirname(self.path), "**/*"), recursive=True):
             if include_test_code is False and "/tests/" in path:
