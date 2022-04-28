@@ -11,6 +11,9 @@ from glob import glob
 _logger = logging.getLogger(__file__)
 
 verbose = True
+include_test_code = False
+validate_core = False
+
 ROOT_PATH = "/usr/share"
 REGEXES = ['odoo-*/*/__manifest__.py', 'odooext-*/*/__manifest__.py']
 CORE_REGEX = ['core-odoo/addons/*/__manifest__.py']
@@ -99,19 +102,28 @@ class Module():
 #<field name="inherit_id" ref="project.view_project_kanban" />
         regexes = {}
         regexes["py"] = {}
-        regexes["py"]["inherits"] = []
-        regexes["py"]["names"] = []
+        regexes["py"]["singleline"] = {}
+        regexes["py"]["singleline"]["inherits"] = []
+        regexes["py"]["singleline"]["names"] = []
+        regexes["py"]["multiline"] = {}
+        regexes["py"]["multiline"]["inherits"] = []
+
 
         regexes["xml"] = {}
 
-        regexes["py"]["inherits"].append(re.compile("^ *_inherit *= *[\"']([^\"']*)[\"'] *$"))
-        regexes["py"]["inherits"].append(re.compile("^ *comodel_name=[\"']([^\"']*)[\"'].*$"))
-        regexes["py"]["inherits"].append(re.compile("^.*request\.env\[[\"']([^\"']*)[\"']\].*$"))
-        regexes["py"]["inherits"].append(re.compile("^.*self\.env\[[\"']([^\"']*)[\"']\].*$"))
+        regexes["py"]["singleline"]["inherits"].append(re.compile("^ *_inherit *= *[\"']([^\"']*)[\"'] *$"))
+        regexes["py"]["singleline"]["inherits"].append(re.compile("^ *comodel_name=[\"']([^\"']*)[\"'].*$"))
+        regexes["py"]["singleline"]["inherits"].append(re.compile("^.*request\.env\[[\"']([^\"']*)[\"']\].*$"))
+        regexes["py"]["singleline"]["inherits"].append(re.compile("^.*self\.env\[[\"']([^\"']*)[\"']\].*$"))
 
-        regexes["py"]["names"].append(re.compile("^ *_name *= *[\"']([^\"']*)[\"'] *$"))
+        regexes["py"]["multiline"]["inherits"].append("self\.env\[[\"']([^\"']*)[\"']\]")
+        regexes["py"]["multiline"]["inherits"].append("request\.env\[[\"']([^\"']*)[\"']\]")
+
+        regexes["py"]["singleline"]["names"].append(re.compile("^ *_name *= *[\"']([^\"']*)[\"'] *$"))
 
         for path in glob(os.path.join(os.path.dirname(self.path), "**/*"), recursive=True):
+            if include_test_code is False and "/tests/" in path:
+                continue
             data = file_parser.parse_file(path)
             _, ext = os.path.splitext(path)
             if ext == ".py":
@@ -121,10 +133,15 @@ class Module():
 
     def parse_py(self, data, regexes):
         for line in data:
-            for key, regex_list in regexes.items():
+            for key, regex_list in regexes["singleline"].items():
                 for regex in regex_list:
                     if res := re.search(regex, line):
                         getattr(self, key).add(res.groups()[0])
+
+        one_line_file = " ".join(data)
+        for key, regex_list in regexes["multiline"].items():
+            for regex in regex_list:
+                getattr(self, key).update(re.findall(regex, one_line_file))
 
     def parse_xml(self, data, regexes):
         if not data:
@@ -182,8 +199,10 @@ if __name__ == "__main__":
         module_list = sorted(modules.values(), key=lambda x: x.package + "_"*100 + x.name)
 
     for module in module_list:
-           dcount, dtotal = module.validate_names(modules)
-           count += dcount
-           total += dtotal
+        if validate_core is False and module.package == 'addons':
+            continue
+        dcount, dtotal = module.validate_names(modules)
+        count += dcount
+        total += dtotal
 
     print(f"Found {count} errors in {total} checks")
