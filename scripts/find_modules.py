@@ -22,8 +22,6 @@ CORE_REGEX = ["core-odoo/addons/*/__manifest__.py"]
 QUOTE = "[\"']"
 NOT_QUOTE = "[^\"']"
 
-RECURSIVE_ERROR = set()
-
 # TODO:
 # * Add multiline _inherit
 # * Add multiline _inherits
@@ -32,11 +30,11 @@ RECURSIVE_ERROR = set()
 # * Add psql-integration to find active modules
 
 
+RECURSIVE_ERROR = set()
 def recursive_error(name):
     if name[-1] not in RECURSIVE_ERROR:
         RECURSIVE_ERROR.add(name[-1])
         _logger.error(f"Recursive import error for module {name}")
-
 
 class FileParser:
     def __init__(self):
@@ -61,7 +59,7 @@ class FileParser:
                         parsed_data = etree.parse(path)
                         etree.strip_tags(parsed_data, etree.Comment)
                     except Exception as e:
-                        pass  # _logger.error(f"Error reading file {path}: {e}")
+                        pass
             self.parsed_files[path] = parsed_data
         return self.parsed_files.get(path)
 
@@ -82,8 +80,7 @@ def find_modules(root_directory=ROOT_PATH, include_core=True):
     for regex in REGEXES + CORE_REGEX:
         path = os.path.join(ROOT_PATH, regex)
         for manifest_path in glob(path):
-            module_name = os.path.basename(os.path.dirname(manifest_path))
-            yield module_name, manifest_path
+            yield manifest_path
 
 
 def find_defining_modules(name, modules):
@@ -93,8 +90,46 @@ def find_defining_modules(name, modules):
 
 
 class Module:
-    def __init__(self, name, path):
-        self.name = name
+
+    _code_regexes = None
+
+    @classmethod
+    def _get_code_regexes(cls):
+        if cls._code_regexes is None:
+            regexes = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
+
+            regexes["py"]["singleline"]["inherits"].append(
+                re.compile(f"^ *_inherit *= *{QUOTE}({NOT_QUOTE}*){QUOTE} *$")
+            )
+            regexes["py"]["singleline"]["inherits"].append(
+                re.compile(f"^ *comodel_name={QUOTE}({NOT_QUOTE}*){QUOTE}.*$")
+            )
+            regexes["py"]["singleline"]["inherits"].append(
+                re.compile(f"^.*request\.env\[{QUOTE}({NOT_QUOTE}*){QUOTE}\].*$")
+            )
+            regexes["py"]["singleline"]["inherits"].append(
+                re.compile(f"^.*self\.env\[{QUOTE}({NOT_QUOTE}*){QUOTE}\].*$")
+            )
+
+            regexes["py"]["multiline"]["inherits"].append(
+                f"self\.env\[{QUOTE}({NOT_QUOTE}*){QUOTE}\]"
+            )
+            regexes["py"]["multiline"]["inherits"].append(
+                f"request\.env\[{QUOTE}({NOT_QUOTE}*){QUOTE}\]"
+            )
+
+            regexes["py"]["singleline"]["names"].append(
+                re.compile(f"^ *_name *= *{QUOTE}({NOT_QUOTE}*){QUOTE} *$")
+            )
+            regexes["py"]["singleline"]["names"].append(
+                re.compile(f"^ *_name *= _description = *{QUOTE}({NOT_QUOTE}*){QUOTE} *$")
+            )  # Special case for core
+
+            cls._code_regexes = regexes
+        return cls._code_regexes
+
+    def __init__(self, path):
+        self.name = os.path.basename(os.path.dirname(path))
         self.path = path
         self.package = os.path.basename(os.path.dirname(os.path.dirname(path)))
 
@@ -110,35 +145,6 @@ class Module:
         return self.depends
 
     def parse_code(self):
-        regexes = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
-
-        regexes["py"]["singleline"]["inherits"].append(
-            re.compile(f"^ *_inherit *= *{QUOTE}({NOT_QUOTE}*){QUOTE} *$")
-        )
-        regexes["py"]["singleline"]["inherits"].append(
-            re.compile(f"^ *comodel_name={QUOTE}({NOT_QUOTE}*){QUOTE}.*$")
-        )
-        regexes["py"]["singleline"]["inherits"].append(
-            re.compile(f"^.*request\.env\[{QUOTE}({NOT_QUOTE}*){QUOTE}\].*$")
-        )
-        regexes["py"]["singleline"]["inherits"].append(
-            re.compile(f"^.*self\.env\[{QUOTE}({NOT_QUOTE}*){QUOTE}\].*$")
-        )
-
-        regexes["py"]["multiline"]["inherits"].append(
-            f"self\.env\[{QUOTE}({NOT_QUOTE}*){QUOTE}\]"
-        )
-        regexes["py"]["multiline"]["inherits"].append(
-            f"request\.env\[{QUOTE}({NOT_QUOTE}*){QUOTE}\]"
-        )
-
-        regexes["py"]["singleline"]["names"].append(
-            re.compile(f"^ *_name *= *{QUOTE}({NOT_QUOTE}*){QUOTE} *$")
-        )
-        regexes["py"]["singleline"]["names"].append(
-            re.compile(f"^ *_name *= _description = *{QUOTE}({NOT_QUOTE}*){QUOTE} *$")
-        )  # Special case for core
-
         for path in glob(
             os.path.join(os.path.dirname(self.path), "**/*"), recursive=True
         ):
@@ -147,9 +153,9 @@ class Module:
             data = file_parser.parse_file(path)
             _, ext = os.path.splitext(path)
             if ext == ".py":
-                self.parse_py(data, regexes["py"])
+                self.parse_py(data, Module._get_code_regexes()["py"])
             elif ext == ".xml":
-                self.parse_xml(data, regexes["xml"])
+                self.parse_xml(data, Module._get_code_regexes()["xml"])
 
     def parse_py(self, data, regexes):
         for line in data:
@@ -207,9 +213,9 @@ class Module:
 
 if __name__ == "__main__":
     modules = {}
-    for name, path in find_modules():
-        module = Module(name, path)
-        modules[name] = module
+    for path in find_modules():
+        module = Module(path)
+        modules[module.name] = module
         module.parse_code()
         module.parse_deps()
 
