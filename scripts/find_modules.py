@@ -25,7 +25,8 @@ NOT_QUOTE = "[^\"']"
 # TODO:
 # * Add multiline _inherit
 # * Add multiline _inherits
-# * When using mulitline _inherits, remove '_name'? (Probably, possibly discussion point)
+# * Include *.po files and their includes (see odooext-sks/sks_translation)
+# * When using mulitline _inherits, remove '_name'? (Probably, possibly discussion point, at minimum for verbose-print)
 # * Add flags to ease use (for example, verbose)
 # * Add psql-integration to find active modules
 
