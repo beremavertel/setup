@@ -17,6 +17,8 @@ alias odoo142='ssh odoo142'
 alias azzar='ssh berema@azzar.net'
 alias saltmaster='ssh emanuel@saltmaster'
 alias saltslave1='ssh emanuel@saltslave1'
+alias hugo='ssh berema@hugo'
+alias kubetest='ssh kubetest'
 
 
 ## CD
