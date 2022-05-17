@@ -1,4 +1,12 @@
+import sys
 DEBUG = False
+TRANS = {
+        'and': '&',
+        'or': '|',
+        }
+
+def compmod(x):
+    return TRANS.get(x, x)
 
 def is_leaf(data, rec=0):
     if DEBUG:
@@ -48,7 +56,7 @@ class Token():
         if self.leaf:
             return str(self.leaf)
         else:
-            s = f"('{self.comp}', {self.lval}, {self.rval})"
+            s = f"('{compmod(self.comp)}', {self.lval}, {self.rval})"
             if self.external:
                 s = f"[{s[1:-1]}]"
             return s
@@ -57,7 +65,7 @@ class Token():
 dep = 0
 
 def flatten(s):
-    return "["  + ", ".join(repr(part) for part in _tflatten(Token(s))) + "]"
+    return "["  + ", ".join(repr(compmod(part)) for part in _tflatten(Token(s))) + "]"
 
 def _tflatten(t):
     global dep
@@ -97,6 +105,11 @@ def test(s, expected=True):
 
 
 if __name__ == "__main__":
+    if len(sys.argv) > 1:
+        print(flatten(eval(sys.argv[1])))
+
+    TRANS.clear()
+
     test("is_leaf(('a', 'b', 'c'))")
     test("is_leaf([('a', 'b', 'c')])")
     test("is_leaf([('a', 'b', 'c'), 'and', ('x',)])", False)
@@ -114,3 +127,4 @@ if __name__ == "__main__":
     test("flatten([('a','b','c'), 'and', ('d', 'e', 'f'), 'or', ('g', 'e', 'h')])",
          ["['or', 'and', ('a', 'b', 'c'), ('d', 'e', 'f'), ('g', 'e', 'h')]",
           "['and', ('a', 'b', 'c'), 'or', ('d', 'e', 'f'), ('g', 'e', 'h')]"])
+
