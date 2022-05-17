@@ -214,7 +214,7 @@ class Module:
         return False
 
 
-def check_missing():
+def check_missing(module_file):
     modules = {}
     for path in find_modules():
         module = Module(path)
@@ -224,12 +224,12 @@ def check_missing():
 
     count = 0
     total = 0
-    try:
-        with open("modules") as f:
+    if module_file:
+        with open(module_file) as f:
             module_list = (
                 modules[x.strip()] for x in f.read().split("\n") if x.strip()
             )
-    except:
+    else:
         module_list = sorted(
             modules.values(), key=lambda x: x.package + "_" * 100 + x.name
         )
@@ -267,6 +267,7 @@ if __name__ == "__main__":
     filtering_operations.add_argument("--include-test-code", dest="INCLUDE_TEST_CODE", action="store_true")
     filtering_operations.add_argument("--skip-validate-core", dest="SKIP_VALIDATE_CORE", action="store_true")
     filtering_operations.add_argument("--add-regex", dest="ADD_REGEX", action="append", default=[])
+    filtering_operations.add_argument("--file", dest="MODULE_FILE", action="store", default=None, help="Path to file containing modules separated with newlines that should be checked")
 
     standard_settings = parser.add_argument_group("Standard settings")
     standard_settings.add_argument("--root-path", dest="ROOT_PATH", default="/usr/share", action="store")
@@ -281,7 +282,7 @@ if __name__ == "__main__":
     REGEXES += args.ADD_REGEX
 
     if args.MISSING:
-        check_missing()
+        check_missing(args.MODULE_FILE)
     elif args.DEPENDENCY:
         check_dependency(args.DEPENDENCY)
     elif args.CONSEQUENCE:
