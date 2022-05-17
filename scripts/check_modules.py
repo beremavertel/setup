@@ -27,10 +27,13 @@ NOT_QUOTE = "[^\"']"
 
 
 RECURSIVE_ERROR = set()
+
+
 def recursive_error(name):
     if name[-1] not in RECURSIVE_ERROR:
         RECURSIVE_ERROR.add(name[-1])
         _logger.error(f"Recursive import error for module {name}")
+
 
 class FileParser:
     def __init__(self):
@@ -114,14 +117,19 @@ class Module:
                 f"request\.env\[{QUOTE}({NOT_QUOTE}*){QUOTE}\]"
             )
             regexes["py"]["multiline"]["inherits"].append(
-                    (re.compile(f"_inherit *= *\[([^]]*)\]"),
-                     re.compile(f"{QUOTE}({NOT_QUOTE}*){QUOTE}")))
+                (
+                    re.compile(f"_inherit *= *\[([^]]*)\]"),
+                    re.compile(f"{QUOTE}({NOT_QUOTE}*){QUOTE}"),
+                )
+            )
 
             regexes["py"]["singleline"]["names"].append(
                 re.compile(f"^ *_name *= *{QUOTE}({NOT_QUOTE}*){QUOTE} *$")
             )
             regexes["py"]["singleline"]["names"].append(
-                re.compile(f"^ *_name *= _description = *{QUOTE}({NOT_QUOTE}*){QUOTE} *$")
+                re.compile(
+                    f"^ *_name *= _description = *{QUOTE}({NOT_QUOTE}*){QUOTE} *$"
+                )
             )  # Special case for core
 
             cls._code_regexes = regexes
@@ -253,24 +261,70 @@ def check_consequence(consequence):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Tool to find and parse module relations")
+    parser = argparse.ArgumentParser(
+        description="Tool to find and parse module relations"
+    )
 
-    main_operations = parser.add_mutually_exclusive_group(required=True)#"Main operations")
-    main_operations.add_argument("-m", "--missing", dest="MISSING", action="store_true", help="Finds missing dependencies in modules")
-    main_operations.add_argument("-d", "--dependency", dest="DEPENDENCY", action="store", default=None, help="Lists all modules in the given modules dependency tree")
-    main_operations.add_argument("-c", "--consequence", dest="CONSEQUENCE", action="store", default=None, help="Lists all modules that has the given module in their dependency tree")
+    main_operations = parser.add_mutually_exclusive_group(
+        required=True
+    )  # "Main operations")
+    main_operations.add_argument(
+        "-m",
+        "--missing",
+        dest="MISSING",
+        action="store_true",
+        help="Finds missing dependencies in modules",
+    )
+    main_operations.add_argument(
+        "-d",
+        "--dependency",
+        dest="DEPENDENCY",
+        action="store",
+        default=None,
+        help="Lists all modules in the given modules dependency tree",
+    )
+    main_operations.add_argument(
+        "-c",
+        "--consequence",
+        dest="CONSEQUENCE",
+        action="store",
+        default=None,
+        help="Lists all modules that has the given module in their dependency tree",
+    )
 
     output_operations = parser.add_argument_group("Output operations")
-    output_operations.add_argument("-v", "--verbose", dest="VERBOSE", action="store_true", help="Gives more output data")
+    output_operations.add_argument(
+        "-v",
+        "--verbose",
+        dest="VERBOSE",
+        action="store_true",
+        help="Gives more output data",
+    )
 
-    filtering_operations = parser.add_argument_group("Filtering operations for 'missing' functionallity")
-    filtering_operations.add_argument("--include-test-code", dest="INCLUDE_TEST_CODE", action="store_true")
-    filtering_operations.add_argument("--skip-validate-core", dest="SKIP_VALIDATE_CORE", action="store_true")
-    filtering_operations.add_argument("--add-regex", dest="ADD_REGEX", action="append", default=[])
-    filtering_operations.add_argument("--file", dest="MODULE_FILE", action="store", default=None, help="Path to file containing modules separated with newlines that should be checked")
+    filtering_operations = parser.add_argument_group(
+        "Filtering operations for 'missing' functionallity"
+    )
+    filtering_operations.add_argument(
+        "--include-test-code", dest="INCLUDE_TEST_CODE", action="store_true"
+    )
+    filtering_operations.add_argument(
+        "--skip-validate-core", dest="SKIP_VALIDATE_CORE", action="store_true"
+    )
+    filtering_operations.add_argument(
+        "--add-regex", dest="ADD_REGEX", action="append", default=[]
+    )
+    filtering_operations.add_argument(
+        "--file",
+        dest="MODULE_FILE",
+        action="store",
+        default=None,
+        help="Path to file containing modules separated with newlines that should be checked",
+    )
 
     standard_settings = parser.add_argument_group("Standard settings")
-    standard_settings.add_argument("--root-path", dest="ROOT_PATH", default="/usr/share", action="store")
+    standard_settings.add_argument(
+        "--root-path", dest="ROOT_PATH", default="/usr/share", action="store"
+    )
 
     args = parser.parse_args()
 
