@@ -3,6 +3,7 @@ import re
 import os
 import logging
 import sys
+import argparse
 
 from collections import defaultdict
 from lxml import etree
@@ -11,11 +12,6 @@ from glob import glob
 
 _logger = logging.getLogger(__file__)
 
-verbose = True
-include_test_code = False
-validate_core = True
-
-ROOT_PATH = "/usr/share"
 REGEXES = ["odoo-*/*/__manifest__.py", "odooext-*/*/__manifest__.py"]
 CORE_REGEX = ["core-odoo/addons/*/__manifest__.py"]
 
@@ -23,7 +19,6 @@ QUOTE = "[\"']"
 NOT_QUOTE = "[^\"']"
 
 # TODO:
-# * Add multiline _inherit
 # * Add multiline _inherits
 # * Include *.po files and their includes (see odooext-sks/sks_translation)
 # * When using mulitline _inherits, remove '_name'? (Probably, possibly discussion point, at minimum for verbose-print)
@@ -77,9 +72,9 @@ class FileParser:
 file_parser = FileParser()
 
 
-def find_modules(root_directory=ROOT_PATH, include_core=True):
+def find_modules(include_core=True):
     for regex in REGEXES + CORE_REGEX:
-        path = os.path.join(ROOT_PATH, regex)
+        path = os.path.join(root_path, regex)
         for manifest_path in glob(path):
             yield manifest_path
 
@@ -118,6 +113,9 @@ class Module:
             regexes["py"]["multiline"]["inherits"].append(
                 f"request\.env\[{QUOTE}({NOT_QUOTE}*){QUOTE}\]"
             )
+            regexes["py"]["multiline"]["inherits"].append(
+                    (re.compile(f"_inherit *= *\[([^]]*)\]"),
+                     re.compile(f"{QUOTE}({NOT_QUOTE}*){QUOTE}")))
 
             regexes["py"]["singleline"]["names"].append(
                 re.compile(f"^ *_name *= *{QUOTE}({NOT_QUOTE}*){QUOTE} *$")
@@ -168,7 +166,11 @@ class Module:
         one_line_file = " ".join(data)
         for key, regex_list in regexes["multiline"].items():
             for regex in regex_list:
-                getattr(self, key).update(re.findall(regex, one_line_file))
+                if not isinstance(regex, tuple):
+                    getattr(self, key).update(re.findall(regex, one_line_file))
+                else:
+                    for match in re.findall(regex[0], one_line_file):
+                        getattr(self, key).update(re.findall(regex[1], match))
 
     def parse_xml(self, data, regexes):
         if not data:
@@ -212,7 +214,7 @@ class Module:
         return False
 
 
-if __name__ == "__main__":
+def check_missing():
     modules = {}
     for path in find_modules():
         module = Module(path)
@@ -240,3 +242,47 @@ if __name__ == "__main__":
         total += dtotal
 
     print(f"Found {count} errors in {total} checks")
+
+
+def check_dependency(dependency):
+    raise NotImplementedError
+
+
+def check_consequence(consequence):
+    raise NotImplementedError
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Tool to find and parse module relations")
+
+    main_operations = parser.add_mutually_exclusive_group(required=True)#"Main operations")
+    main_operations.add_argument("-m", "--missing", dest="MISSING", action="store_true", help="Finds missing dependencies in modules")
+    main_operations.add_argument("-d", "--dependency", dest="DEPENDENCY", action="store", default=None, help="Lists all modules in the given modules dependency tree")
+    main_operations.add_argument("-c", "--consequence", dest="CONSEQUENCE", action="store", default=None, help="Lists all modules that has the given module in their dependency tree")
+
+    output_operations = parser.add_argument_group("Output operations")
+    output_operations.add_argument("-v", "--verbose", dest="VERBOSE", action="store_true", help="Gives more output data")
+
+    filtering_operations = parser.add_argument_group("Filtering operations for 'missing' functionallity")
+    filtering_operations.add_argument("--include-test-code", dest="INCLUDE_TEST_CODE", action="store_true")
+    filtering_operations.add_argument("--skip-validate-core", dest="SKIP_VALIDATE_CORE", action="store_true")
+    filtering_operations.add_argument("--add-regex", dest="ADD_REGEX", action="append", default=[])
+
+    standard_settings = parser.add_argument_group("Standard settings")
+    standard_settings.add_argument("--root-path", dest="ROOT_PATH", default="/usr/share", action="store")
+
+    args = parser.parse_args()
+
+    verbose = args.VERBOSE
+    include_test_code = args.INCLUDE_TEST_CODE
+    validate_core = not args.SKIP_VALIDATE_CORE
+    root_path = args.ROOT_PATH
+
+    REGEXES += args.ADD_REGEX
+
+    if args.MISSING:
+        check_missing()
+    elif args.DEPENDENCY:
+        check_dependency(args.DEPENDENCY)
+    elif args.CONSEQUENCE:
+        check_consequence(args.CONSEQUENCE)
