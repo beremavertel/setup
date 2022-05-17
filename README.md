@@ -1,3 +1,9 @@
+
+# THIS TEXT IS NOW DEPRECATED.
+Script has been moved to https://github.com/vertelab/odootools/ in the folder scripts/odoocheckdeps.py on branch 14.0
+
+# OLD TEXT
+<del>
 # setup
 
 Add setup/scripts to your $PATH, or navigate to setup/scripts and:
@@ -34,4 +40,4 @@ Print installed modules in a file, "modules". <br>
 **3. FIND ERRORS IN MODULES**
 
 `$ find_modules.py`
-
+</del>
