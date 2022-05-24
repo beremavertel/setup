@@ -80,3 +80,7 @@ alias skog_mailcatcher='echo "OPEN FIREFOX ON http://localhost:6113"; ssh berema
 
 
 alias python=python3
+
+function manifest {
+   vi "$1/__manifest__.py"
+}
