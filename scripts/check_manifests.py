@@ -10,10 +10,8 @@ from collections import defaultdict
 
 
 
-# TODO: Add a standard file that this should check for discrepancies agaist
-# This may then be used to automatically assure that we produce manifest files that
-# conform to a given standard.
-
+# TODO: There's currently a bug where if a manifest does not have a specific attribute it will not be
+# noticed by the script. This needs to be fixed.
 
 def verify_results(path, manifest_path):
     with open(manifest_path) as file_handle:
